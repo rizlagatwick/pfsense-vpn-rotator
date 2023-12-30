@@ -41,6 +41,15 @@ Run the script directly from the pfSense shell or use the cron package in pfSens
 
 Replace `<vpnid>` with the appropriate VPN ID.
 
+## Troubleshooting
+If you are unsure of your vpnid you can run the following commands from the shell on pfSense to view the Openvpn client configuration information:
+```terminal
+pfSsh.php
+print_r($config['openvpn']['openvpn-client']);
+exec;
+exit
+```
+
 ## License
 
 This script is released under the [MIT License](LICENSE).
