@@ -3,12 +3,12 @@
 # ---------------------------------------------------------------------------------
 # Script Name: pfSense Client VPN Rotator (pfsense-vpn-rotator.sh)
 #
-# Description: Automates the rotation of OpenVPN server addresses and ports for 
-#              OpenVPN client configurations on pfSense systems. This script uses 
+# Description: Automates the rotation of OpenVPN server addresses and ports for
+#              OpenVPN client configurations on pfSense systems. This script uses
 #              pfSsh.php for making configuration changes, avoiding direct editing
-#              of config.xml and potential file corruption. It selects a random VPN 
+#              of config.xml and potential file corruption. It selects a random VPN
 #              server from predefined lists, updates the OpenVPN client configuration,
-#              and restarts the VPN service for seamless changes. Example server lists 
+#              and restarts the VPN service for seamless changes. Example server lists
 #              are provided for ProtonVPN AU and US.
 #
 # Usage:       ./pfsense-vpn-rotator.sh <vpnid>
@@ -128,16 +128,16 @@ run_pfshell_cmd_getconfig() {
     tmpfile2=/tmp/getovpnconfig.output
 
     # Create a file named config.input and write the desired content to it
-    echo 'print_r($config['\'openvpn\'']['\'openvpn-client\'']);' > $tmpfile
-    echo 'exec' >> $tmpfile
-    echo 'exit' >> $tmpfile
+    echo 'print_r($config['\'openvpn\'']['\'openvpn-client\'']);' >$tmpfile
+    echo 'exec' >>$tmpfile
+    echo 'exit' >>$tmpfile
 
-    if ! output=$(/usr/local/sbin/pfSsh.php < $tmpfile); then
+    if ! output=$(/usr/local/sbin/pfSsh.php <$tmpfile); then
         echo "Error executing command."
         return 1
     fi
 
-    echo "$output" > $tmpfile2
+    echo "$output" >$tmpfile2
     echo "$output"
 }
 
@@ -162,24 +162,23 @@ run_pfshell_cmd_get_server_addr() {
     echo "$server_addr"
 }
 
-
 run_pfshell_cmd_setconfig() {
     echo "Running pfSsh.php to set OpenVPN configuration..."
     tmpfile=/tmp/setovpnconfig.cmd
     array_index="$1"
     server_addr="$2"
     server_port="$3"
-    
+
     # Create a file named config.input and write the desired content to it
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid Updated $current_date_time';" > $tmpfile
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >> "$tmpfile"
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >> "$tmpfile"
-    echo 'write_config("Updating VPN client");' >> $tmpfile
-    echo 'exec' >> $tmpfile
-    echo 'exit' >> $tmpfile
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid Updated $current_date_time';" >$tmpfile
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >>"$tmpfile"
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >>"$tmpfile"
+    echo 'write_config("Updating VPN client");' >>$tmpfile
+    echo 'exec' >>$tmpfile
+    echo 'exit' >>$tmpfile
 
     # Execute the file and capture the output
-    output=$(/usr/local/sbin/pfSsh.php < "$tmpfile")
+    output=$(/usr/local/sbin/pfSsh.php <"$tmpfile")
     echo "$output"
 }
 
@@ -200,39 +199,38 @@ find_vpnid_array_index() {
     '
 }
 
-
 # Function to select a random line from an IP list
 select_random_server() {
-  # Accept the IP list and current IP address as arguments
-  local server_list="$1"
-  local current_server="$2"
+    # Accept the IP list and current IP address as arguments
+    local server_list="$1"
+    local current_server="$2"
 
-  # Use awk to count the number of lines in the list
-  num_lines=$(echo "$server_list" | wc -l)
-  
-  # Initialize variables for IP address and port
-  local server_addr=""
-  local server_port=""
-  
-  # Loop until a non-blank IP address and port are found
-  while [ -z "$server_addr" ] || [ -z "$server_port" ] || [ "$server_addr" = "$current_server" ]; do
-    # Generate a random line number within the range of lines
-    random_line=$(awk -v min=1 -v max="$num_lines" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
-  
-    # Use sed to extract the random line
-    random_server_line=$(echo "$server_list" | sed -n "${random_line}p")
-  
-    # Split the line into IP address and port number
-    server_addr=$(echo "$random_server_line" | awk '{print $1}')
-    server_port=$(echo "$random_server_line" | awk '{print $2}')
-  done
+    # Use awk to count the number of lines in the list
+    num_lines=$(echo "$server_list" | wc -l)
 
-  # Return the selected IP address and port number
-  echo "$server_addr $server_port"
+    # Initialize variables for IP address and port
+    local server_addr=""
+    local server_port=""
+
+    # Loop until a non-blank IP address and port are found
+    while [ -z "$server_addr" ] || [ -z "$server_port" ] || [ "$server_addr" = "$current_server" ]; do
+        # Generate a random line number within the range of lines
+        random_line=$(awk -v min=1 -v max="$num_lines" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+
+        # Use sed to extract the random line
+        random_server_line=$(echo "$server_list" | sed -n "${random_line}p")
+
+        # Split the line into IP address and port number
+        server_addr=$(echo "$random_server_line" | awk '{print $1}')
+        server_port=$(echo "$random_server_line" | awk '{print $2}')
+    done
+
+    # Return the selected IP address and port number
+    echo "$server_addr $server_port"
 }
 
 run_vpn_service_command() {
-    local action="$1"  # Action can be 'start', 'stop', or 'restart'
+    local action="$1" # Action can be 'start', 'stop', or 'restart'
 
     # Validate the action using POSIX compliant syntax
     if [ "$action" != "start" ] && [ "$action" != "stop" ] && [ "$action" != "restart" ]; then
@@ -243,7 +241,7 @@ run_vpn_service_command() {
     # Execute the command
     local command="/usr/local/sbin/pfSsh.php playback svc $action openvpn client $vpnid"
     echo "Executing: $command"
-    
+
     if ! output=$($command); then
         echo "Error executing command."
         return 1
