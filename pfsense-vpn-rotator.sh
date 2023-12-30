@@ -252,8 +252,11 @@ run_vpn_service_command() {
 }
 
 main() {
-    echo "$current_date_time"
-    echo "Running pfSense OpenVPN client server rotator script"
+    echo ""
+    echo " ###########################################"
+    echo " ## pfSense OpenVPN Client Rotator Script ##"
+    echo " ###########################################"
+    echo ""
 
     # Get the script name
     script_name=$(basename "$0")
@@ -279,9 +282,11 @@ main() {
     fi
 
     # Call run_pfshell_cmd and store the output
+    echo "Fetching all OpenVPN client configurations..."
     pfssh_output=$(run_pfshell_cmd_getconfig)
 
     # Find the array index with the matching vpnid
+    echo "Finding array index for vpnid $vpnid..."
     array_index=$(find_vpnid_array_index "$pfssh_output")
 
     # Check if a valid index was found
@@ -293,6 +298,7 @@ main() {
     fi
 
     # Get the server_addr for the given array index
+    echo "Fetching current server_addr for vpnid $vpnid..."
     current_server_addr=$(run_pfshell_cmd_get_server_addr "$array_index")
     echo "The current server_addr for vpnid $vpnid is: $current_server_addr"
 
@@ -305,7 +311,7 @@ main() {
     fi
 
     # Split the returned value into IP and port
-    echo "Selecting random server address address from server_list$vpnid..."
+    echo "Selecting random server address from server_list$vpnid..."
     selected_server_addr=$(echo "$selected_server_addr_port" | awk '{print $1}')
     selected_server_port=$(echo "$selected_server_addr_port" | awk '{print $2}')
 
@@ -314,10 +320,17 @@ main() {
     echo "Selected Server Port: $selected_server_port"
 
     # Call run_pfshell_cmd_setconfig and store the output
+    echo "Setting new server address and port for vpnid $vpnid..."
     pfssh_output=$(run_pfshell_cmd_setconfig "$array_index" "$selected_server_addr" "$selected_server_port")
 
     # Call run_vpn_service_command to restart the VPN service
+    echo "Restarting OpenVPN service for vpnid $vpnid..."
     run_vpn_service_command "restart"
+
+    # Clean up tmp files
+    echo "Cleaning up temporary files..."
+    rm /tmp/getovpnconfig.cmd
+    rm /tmp/getovpnconfig.output
 
     echo "Script completed."
 }
