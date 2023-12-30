@@ -1,4 +1,4 @@
-# pfSense Client VPN Rotator / Randomizer
+# pfSense OpenVPN Client Rotator / Randomizer
 
 ## Overview
 
