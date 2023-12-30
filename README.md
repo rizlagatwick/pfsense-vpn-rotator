@@ -1,8 +1,8 @@
-# pfSense Client VPN Rotator (`pfsense-vpn-rotator.sh`)
+# pfSense Client VPN Rotator / Randomizer
 
 ## Overview
 
-`pfsense-vpn-rotator.sh` is a shell script designed for pfSense systems to automate the rotation of OpenVPN server addresses and ports for **existing** OpenVPN client configurations.
+`pfsense-vpn-rotator.sh` is a shell script specifically designed for pfSense systems. Its primary function is to automate the process of rotating and randomizing server addresses and ports for **existing** OpenVPN client configurations. This script ensures dynamic and secure VPN connections by periodically altering the VPN endpoints.
 
 ## Features
 
