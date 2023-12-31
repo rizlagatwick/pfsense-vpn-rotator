@@ -32,7 +32,9 @@ current_date_time=$(date +"%H:%M:%S %d %b %Y")
 vpnid="$1"
 
 # Define your server lists, the number should match the vpnid
-server_list1="protonvpn_us_secure_core_server_list
+# The server_name is added to the OpenVPN client description for easy identification
+server_name1="protonvpn_us_secure_core"
+server_list1="
 185.159.157.122 51820
 185.159.157.121 5060
 185.159.157.124 1194
@@ -95,32 +97,68 @@ server_list1="protonvpn_us_secure_core_server_list
 185.159.157.123 1194
 "
 
-server_list2="protonvpn_au_secure_core_server_list
-185.159.157.253 5060
-185.159.157.253 51820
-185.159.157.192 51820
-185.159.157.212 5060
-185.159.157.252 1194
-185.159.157.252 4569
-185.159.157.252 5060
-185.159.157.212 51820
-185.159.157.211 51820
-185.159.157.211 80
-185.159.157.192 4569
-185.159.157.253 80
-185.159.157.212 80
-185.159.157.253 1194
-185.159.157.212 1194
-185.159.157.211 1194
-185.159.157.211 5060
-185.159.157.212 4569
-185.159.157.192 80
-185.159.157.252 51820
-185.159.157.253 4569
-185.159.157.211 4569
-185.159.157.192 1194
-185.159.157.252 80
-185.159.157.192 5060
+server_name2="protonvpn_au_standard"
+server_list2="
+103.108.229.18 80
+103.214.20.210 5060
+138.199.33.225 51820
+144.48.39.226 1194
+103.216.220.98 1194
+103.108.229.18 1194
+138.199.33.225 1194
+103.214.20.210 4569
+144.48.39.226 51820
+103.108.231.18 51820
+138.199.33.225 5060
+103.214.20.98 80
+144.48.39.226 1194
+144.48.39.226 5060
+103.108.231.18 1194
+103.108.231.18 80
+103.214.20.98 4569
+103.108.231.18 5060
+103.108.231.18 80
+103.214.20.210 5060
+103.214.20.210 4569
+103.108.229.18 51820
+103.214.20.98 80
+103.216.220.98 51820
+144.48.39.226 80
+103.214.20.98 1194
+103.216.220.98 5060
+103.108.231.18 1194
+103.108.231.18 4569
+103.214.20.210 1194
+103.216.220.98 4569
+103.214.20.210 80
+103.214.20.98 51820
+144.48.39.226 5060
+103.214.20.98 5060
+144.48.39.226 80
+138.199.33.225 4569
+138.199.33.225 80
+103.214.20.98 5060
+144.48.39.226 51820
+144.48.39.226 1194
+103.108.229.18 4569
+144.48.39.226 4569
+103.216.220.98 80
+103.108.231.18 4569
+103.108.229.18 5060
+144.48.39.226 4569
+103.108.231.18 5060
+103.214.20.210 51820
+103.214.20.98 51820
+103.214.20.210 80
+103.214.20.210 1194
+103.214.20.98 1194
+103.214.20.98 4569
+144.48.39.226 80
+144.48.39.226 4569
+103.108.231.18 51820
+103.214.20.210 51820
+144.48.39.226 51820
+144.48.39.226 5060
 "
 
 run_pfshell_cmd_getconfig() {
@@ -166,11 +204,12 @@ run_pfshell_cmd_setconfig() {
     echo "Running pfSsh.php to set OpenVPN configuration..."
     tmpfile=/tmp/setovpnconfig.cmd
     array_index="$1"
-    server_addr="$2"
-    server_port="$3"
+    server_desc="$2"
+    server_addr="$3"
+    server_port="$4"
 
     # Create a file named config.input and write the desired content to it
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid Updated $current_date_time';" >$tmpfile
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid $server_desc changed $current_date_time';" >$tmpfile
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >>"$tmpfile"
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >>"$tmpfile"
     echo 'write_config("Updating VPN client");' >>$tmpfile
@@ -199,34 +238,61 @@ find_vpnid_array_index() {
     '
 }
 
-# Function to select a random line from an IP list
+# Function to validate IPv4, IPv6, or a valid hostname
+validate_server_address() {
+    local address="$1"
+    # Check for valid IPv4 or IPv6 address
+    if echo "$address" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
+        return 0 # IPv4
+    elif echo "$address" | grep -qE '^[0-9a-fA-F:]+$'; then
+        return 0 # IPv6
+    # Check for valid hostname (complying with RFC 1123)
+    elif echo "$address" | grep -qE '^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.([a-zA-Z]{2,}|[a-zA-Z0-9-]{2,}\.[a-zA-Z]{2,})$'; then
+        return 0 # Hostname
+    else
+        return 1 # Invalid address
+    fi
+}
+
+# Function to validate port number
+validate_port_number() {
+    local port="$1"
+    if echo "$port" | grep -qE '^[0-9]+$' && [ "$port" -ge 1 ] && [ "$port" -le 65535 ]; then
+        return 0 # Valid port
+    else
+        return 1 # Invalid port
+    fi
+}
+
+# Function to select a random line from a server list
 select_random_server() {
-    # Accept the IP list and current IP address as arguments
     local server_list="$1"
     local current_server="$2"
 
-    # Use awk to count the number of lines in the list
     num_lines=$(echo "$server_list" | wc -l)
-
-    # Initialize variables for IP address and port
     local server_addr=""
     local server_port=""
+    local attempts=0
+    local max_attempts=10
 
-    # Loop until a non-blank IP address and port are found
-    while [ -z "$server_addr" ] || [ -z "$server_port" ] || [ "$server_addr" = "$current_server" ]; do
-        # Generate a random line number within the range of lines
-        random_line=$(awk -v min=1 -v max="$num_lines" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+    while [ $attempts -lt $max_attempts ]; do
+        attempts=$((attempts + 1))
 
-        # Use sed to extract the random line
+        # Generate a random number using od and head
+        random_line=$(od -An -N2 -i /dev/urandom | awk -v num_lines="$num_lines" '{print ($1 % num_lines) + 1}')
+
         random_server_line=$(echo "$server_list" | sed -n "${random_line}p")
-
-        # Split the line into IP address and port number
         server_addr=$(echo "$random_server_line" | awk '{print $1}')
         server_port=$(echo "$random_server_line" | awk '{print $2}')
+
+        if validate_server_address "$server_addr" && validate_port_number "$server_port" && [ "$server_addr" != "$current_server" ]; then
+            echo "$server_addr $server_port"
+            return 0
+        fi
     done
 
-    # Return the selected IP address and port number
-    echo "$server_addr $server_port"
+    echo "Error: Unable to select a different server address after $max_attempts attempts." >&2
+    return 1
 }
 
 run_vpn_service_command() {
@@ -272,12 +338,18 @@ main() {
     # Set the current IP address
     current_server="current_server_ADDRESS"
 
-    # Determine which IP list to use based on the argument
+    # Determine which server list and name to use based on the argument
     vpn_server_list="server_list${vpnid}"
+    vpn_server_name="server_name${vpnid}"
 
-    # Use eval to construct the command to get the correct IP list
-    if ! eval "selected_server_addr_list=\${$vpn_server_list}"; then
-        echo "Error evaluating IP list."
+    # Use eval to construct the command to get the correct server list
+    if ! eval "selected_server_list=\${$vpn_server_list}"; then
+        echo "Error evaluating server list."
+        exit 1
+    fi
+
+    if ! eval "selected_server_name=\${$vpn_server_name}"; then
+        echo "Error evaluating server list."
         exit 1
     fi
 
@@ -302,9 +374,9 @@ main() {
     current_server_addr=$(run_pfshell_cmd_get_server_addr "$array_index")
     echo "The current server_addr for vpnid $vpnid is: $current_server_addr"
 
-    # Check if the selected IP list is not empty
-    if [ -n "$selected_server_addr_list" ]; then
-        selected_server_addr_port=$(select_random_server "$selected_server_addr_list" "$current_server")
+    # Check if the selected server list is not empty
+    if [ -n "$selected_server_list" ]; then
+        selected_server_addr_port=$(select_random_server "$selected_server_list" "$current_server")
     else
         echo "No server_list$vpnid defined in script."
         exit 1
@@ -321,7 +393,7 @@ main() {
 
     # Call run_pfshell_cmd_setconfig and store the output
     echo "Setting new server address and port for vpnid $vpnid..."
-    pfssh_output=$(run_pfshell_cmd_setconfig "$array_index" "$selected_server_addr" "$selected_server_port")
+    pfssh_output=$(run_pfshell_cmd_setconfig "$array_index" "$selected_server_name" "$selected_server_addr" "$selected_server_port")
 
     # Call run_vpn_service_command to restart the VPN service
     echo "Restarting OpenVPN service for vpnid $vpnid..."
