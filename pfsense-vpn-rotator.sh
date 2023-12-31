@@ -209,7 +209,7 @@ run_pfshell_cmd_setconfig() {
     server_port="$4"
 
     # Create a file named config.input and write the desired content to it
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid $server_desc changed $current_date_time';" >$tmpfile
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid $server_desc';" >$tmpfile
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >>"$tmpfile"
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >>"$tmpfile"
     echo 'write_config("Updating VPN client");' >>$tmpfile

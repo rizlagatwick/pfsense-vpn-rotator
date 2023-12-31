@@ -31,7 +31,7 @@ The script leverages `pfSsh.php` for configuration changes rather than directly 
 3. Make the script executable: `chmod +x pfsense-vpn-rotator.sh`.
 4. Ensure that your server lists (`server_list1`, `server_list2`, etc.) are correctly defined within the script. Each list should correspond to a specific VPN ID. (Example has ProtonVPN AU and US server lists).  
 
-Note: The name variable above the server_list (`server_name1`, `server_name2`, etc.) will be added to the OpenVPN client description to make it easier to identify the VPN connections in the pfSense WebUI. The description will also have the time and date the server was changed.
+Note: The name variable above the server_list (`server_name1`, `server_name2`, etc.) will be added to the OpenVPN client description to make it easier to identify the VPN connections in the pfSense WebUI.
 
 ## Quick Download and Install Method
 
