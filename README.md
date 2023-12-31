@@ -54,9 +54,8 @@ chmod +x /usr/local/sbin/pfsense-vpn-rotator.sh
 # Replace `<vpnid>` with the appropriate VPN ID.
 ```
 
-Run the script directly from the pfSense shell or use the cron package in pfSense for scheduling the script execution. To install cron from WebUI goto `System > Package Manager` if Cron not in `Installed Packages` go to `Available Packages` and search `Cron`.
-
-Once installed `Cron` will appear under the `Services` menu option.
+Run the script directly from the pfSense shell or use the cron package in pfSense for scheduling the script execution. To install cron from WebUI goto `System > Package Manager`. If `Cron` is not in `Installed Packages` go to `Available Packages` and search `Cron` and install. Once installed `Cron` will appear under the `Services` pfSense menu.  
+  
 Below is an example of Cron job running the script every 6 hours for OpenVPN client (vpnid) 1
 ```terminal
 0 	*/6 	* 	* 	* 	root 	/usr/local/sbin/pfsense-vpn-rotator.sh 1
