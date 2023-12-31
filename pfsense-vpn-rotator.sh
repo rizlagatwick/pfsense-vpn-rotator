@@ -33,7 +33,7 @@ vpnid="$1"
 
 # Define your server lists, the number should match the vpnid
 # The server_name is added to the OpenVPN client description for easy identification
-server_name1="protonvpn_us_secure_core"
+server_name1="ProtonVPN US Secure Core"
 server_list1="
 185.159.157.122 51820
 185.159.157.121 5060
@@ -97,7 +97,7 @@ server_list1="
 185.159.157.123 1194
 "
 
-server_name2="protonvpn_au_standard"
+server_name2="ProtonVPN AU Standard"
 server_list2="
 103.108.229.18 80
 103.214.20.210 5060
@@ -209,7 +209,7 @@ run_pfshell_cmd_setconfig() {
     server_port="$4"
 
     # Create a file named config.input and write the desired content to it
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'VPNID $vpnid $server_desc';" >$tmpfile
+    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'vpnid${vpnid} ${server_desc}';" >$tmpfile
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >>"$tmpfile"
     echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >>"$tmpfile"
     echo 'write_config("Updating VPN client");' >>$tmpfile
