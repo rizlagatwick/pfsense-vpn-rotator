@@ -27,21 +27,40 @@ The script leverages `pfSsh.php` for configuration changes rather than directly 
 ## Installation
 
 1. Download and edit the script as required.
-2. Ensure that your server lists (`server_list1`, `server_list2`, etc.) are correctly defined within the script. Each list should correspond to a specific VPN ID. (Example has ProtonVPN AU and US server lists).  
-3. Copy the script to your pfSense server (e.g., /usr/local/sbin).
-4. Make the script executable: `chmod +x pfsense-vpn-rotator.sh`.
-  
+2. Copy the script to your pfSense server (e.g., /usr/local/sbin).
+3. Make the script executable: `chmod +x pfsense-vpn-rotator.sh`.
+4. Ensure that your server lists (`server_list1`, `server_list2`, etc.) are correctly defined within the script. Each list should correspond to a specific VPN ID. (Example has ProtonVPN AU and US server lists).  
+
 Note: The name variable above the server_list (`server_name1`, `server_name2`, etc.) will be added to the OpenVPN client description to make it easier to identify the VPN connections in the pfSense WebUI. The description will also have the time and date the server was changed.
 
-## Usage
-
-Run the script directly from the pfSense shell or use the cron package in pfSense for scheduling the script execution.
+## Quick Download and Install Method
 
 ```terminal
-./pfsense-vpn-rotator.sh <vpnid>
+# Run from pfSense terminal (CLI)
+curl -o /usr/local/sbin/pfsense-vpn-rotator.sh https://raw.githubusercontent.com/bradsec/pfsense-vpn-rotator/main/pfsense-vpn-rotator.sh
+
+# Make the script executable
+chmod +x /usr/local/sbin/pfsense-vpn-rotator.sh
+
+# Run script as required (example below for OpenVPN client (vpnid) 1)
+/usr/local/sbin/pfsense-vpn-rotator.sh 1
+```
+  
+## Usage
+
+```terminal
+/usr/local/sbin/pfsense-vpn-rotator.sh <vpnid>
+
+# Replace `<vpnid>` with the appropriate VPN ID.
 ```
 
-Replace `<vpnid>` with the appropriate VPN ID.
+Run the script directly from the pfSense shell or use the cron package in pfSense for scheduling the script execution. To install cron from WebUI goto `System > Package Manager` if Cron not in `Installed Packages` go to `Available Packages` and search `Cron`.
+
+Once installed `Cron` will appear under the `Services` menu option.
+Below is an example of Cron job running the script every 6 hours for OpenVPN client (vpnid) 1
+```terminal
+0 	*/6 	* 	* 	* 	root 	/usr/local/sbin/pfsense-vpn-rotator.sh 1
+```
 
 ## Troubleshooting
 If you are unsure of your vpnid you can run the following commands from the shell on pfSense to view the Openvpn client configuration information:
