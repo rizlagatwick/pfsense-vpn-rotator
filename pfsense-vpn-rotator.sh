@@ -166,7 +166,8 @@ run_pfshell_cmd_getconfig() {
     tmpfile2=/tmp/getovpnconfig.output
 
     # Create a file named config.input and write the desired content to it
-    echo 'print_r($config['\'openvpn\'']['\'openvpn-client\'']);' >$tmpfile
+    echo '$clients = config_get_path('\'openvpn/openvpn-client\'');' >$tmpfile
+    echo 'print_r($clients);' >>$tmpfile
     echo 'exec' >>$tmpfile
     echo 'exit' >>$tmpfile
 
@@ -209,9 +210,9 @@ run_pfshell_cmd_setconfig() {
     server_port="$4"
 
     # Create a file named config.input and write the desired content to it
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['description'] = 'vpnid${vpnid} ${server_desc}';" >$tmpfile
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_addr'] = '$server_addr';" >>"$tmpfile"
-    echo "\$config['openvpn']['openvpn-client'][$array_index]['server_port'] = '$server_port';" >>"$tmpfile"
+    echo "config_set_path('openvpn/openvpn-client/${array_index}/description', 'vpnid${vpnid} ${server_desc}');" >$tmpfile
+    echo "config_set_path('openvpn/openvpn-client/${array_index}/server_addr', '$server_addr');" >>"$tmpfile"
+    echo "config_set_path('openvpn/openvpn-client/${array_index}/server_port', '$server_port');" >>"$tmpfile"
     echo 'write_config("Updating VPN client");' >>$tmpfile
     echo 'exec' >>$tmpfile
     echo 'exit' >>$tmpfile
@@ -403,6 +404,7 @@ main() {
     echo "Cleaning up temporary files..."
     rm /tmp/getovpnconfig.cmd
     rm /tmp/getovpnconfig.output
+    rm /tmp/setovpnconfig.cmd
 
     echo "Script completed."
 }
